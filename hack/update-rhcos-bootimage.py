@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Usage: ./hack/update-rhcos-bootimage.py https://releases-art-rhcos.svc.ci.openshift.org/storage/releases/ootpa/410.8.20190401.0/meta.json
+# Usage: ./hack/update-rhcos-bootimage.py https://releases-art-rhcos.svc.ci.openshift.org/storage/releases/ootpa/410.8.20190401.0/meta.json amd64
 import codecs,os,sys,json,argparse
 import urllib.parse
 import urllib.request
@@ -8,11 +8,12 @@ import urllib.request
 # builds.  Do not try to e.g. point to RHT-internal endpoints.
 RHCOS_RELEASES_APP = 'https://releases-art-rhcos.svc.ci.openshift.org'
 
-dn = os.path.abspath(os.path.dirname(sys.argv[0]))
-
 parser = argparse.ArgumentParser()
 parser.add_argument("meta", action='store')
+parser.add_argument("arch", action='store', choices=['amd64'])
 args = parser.parse_args()
+
+RHCOS_BUILD_METADATA = os.path.join(os.path.dirname(sys.argv[0]), f"../data/data/rhcos-{args.arch}.json")
 
 if not args.meta.startswith(RHCOS_RELEASES_APP):
     raise SystemExit("URL must start with: " + RHCOS_RELEASES_APP)
@@ -32,5 +33,6 @@ newmeta['amis'] = {
     for entry in meta['amis']
 }
 newmeta['baseURI'] = urllib.parse.urljoin(args.meta, '.')
-with open(os.path.join(dn, "../data/data/rhcos.json"), 'w') as f:
+
+with open(RHCOS_BUILD_METADATA, 'w') as f:
     json.dump(newmeta, f, sort_keys=True, indent=4)
